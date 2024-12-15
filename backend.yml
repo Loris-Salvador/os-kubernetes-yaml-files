@@ -1,0 +1,37 @@
+#apiVersion: v1
+#kind: Service
+#metadata:
+#  name: backend-salvador
+#spec:
+#  selector:
+#    app: backend-salvador
+#  ports:
+#    - protocol: TCP
+#      port: 3000
+#      targetPort: 3000
+#  type: ClusterIP
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-salvador
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backend-salvador
+  template:
+    metadata:
+      labels:
+        app: backend-salvador
+    spec:
+      containers:
+      - name: database-salvador
+        image: 192.168.2.202:5000/backend-node-salvador:1.0.0
+        ports:
+          - containerPort: 3000
+        env:
+          - name: MONGO_URI
+            value: "mongodb://salvadorChat:salvadorChat@database-salvador:27017/chat"

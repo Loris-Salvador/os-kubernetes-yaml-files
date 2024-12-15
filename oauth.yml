@@ -1,0 +1,103 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: oauth-htpasswd-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 1Mi
+  storageClassName: storage-oauth
+
+---
+
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: oauth-htpasswd-pv
+spec:
+  capacity:
+    storage: 1Mi
+  accessModes:
+    - ReadWriteMany
+  storageClassName: storage-oauth
+  nfs:
+    server: "192.168.2.202"
+    path: "/mnt/chat_app_oauth"
+---
+
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: oauth-salvador
+spec:
+  selector:
+    app: oauth-salvador
+  ports:
+    - protocol: TCP
+      port: 4180
+      targetPort: 4180
+  type: ClusterIP
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth-salvador
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oauth-salvador
+  template:
+    metadata:
+      labels:
+        app: oauth-salvador
+    spec:
+      containers:
+      - name: oauth-salvador
+        image: 192.168.2.202:5000/quay.io/oauth2-proxy/oauth2-proxy:1.0.0
+        env:
+          - name: OAUTH2_PROXY_HTTP_ADDRESS
+            value: "0.0.0.0:4180"
+          - name: OAUTH2_PROXY_PROVIDER
+            value: "gitlab"
+          - name: OAUTH2_PROXY_OIDC_ISSUER_URL
+            value: "http://dummy.com"
+          - name: OAUTH2_PROXY_OIDC_JWKS_URL
+            value: "http://dummy.com"
+          - name: OAUTH2_PROXY_CLIENT_ID
+            value: "client_id"
+          - name: OAUTH2_PROXY_CLIENT_SECRET
+            value: "client_secret"
+          - name: OAUTH2_PROXY_UPSTREAMS
+            value: "http://frontend-salvador:80/"
+          - name: OAUTH2_PROXY_SSL_INSECURE_SKIP_VERIFY
+            value: "true"
+          - name: OAUTH2_PROXY_COOKIE_SECRET
+            value: "12345678901234567890123456789000"
+          - name: OAUTH2_PROXY_COOKIE_SECURE
+            value: "false"
+          - name: OAUTH2_PROXY_COOKIE_PATH
+            value: "/"
+          - name: OAUTH2_PROXY_COOKIE_DOMAINS
+            value: "*"
+          - name: OAUTH2_PROXY_HTPASSWD_FILE
+            value: "/etc/oauth2-proxy/.htpasswd"
+          - name: OAUTH2_PROXY_SKIP_OIDC_DISCOVERY
+            value: "true"
+          - name: OAUTH2_PROXY_REDIRECT_URL
+            value: "http://frontend-salvador:80/"
+        ports:
+          - containerPort: 4180
+        volumeMounts:
+            - name: oauth-htpasswd-storage
+              mountPath: /etc/oauth2-proxy/.htpasswd
+              subPath: .htpasswd
+      volumes:
+        - name: oauth-htpasswd-storage
+          persistentVolumeClaim:
+            claimName: oauth-htpasswd-pvc
