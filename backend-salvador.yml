@@ -34,4 +34,7 @@ spec:
           - containerPort: 3000
         env:
           - name: MONGO_URI
-            value: "mongodb://salvadorChat:salvadorChat@database-salvador:27017/chat"
+            valueFrom:
+              secretKeyRef:
+                name: mongo-credentials
+                key: uri
