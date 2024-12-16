@@ -1,16 +1,16 @@
-#apiVersion: v1
-#kind: Service
-#metadata:
-#  name: backend-salvador
-#spec:
-#  selector:
-#    app: backend-salvador
-#  ports:
-#    - protocol: TCP
-#      port: 3000
-#      targetPort: 3000
-#  type: ClusterIP
-
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-salvador
+spec:
+  selector:
+    app: backend-salvador
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30001
 ---
 
 apiVersion: apps/v1
@@ -28,7 +28,7 @@ spec:
         app: backend-salvador
     spec:
       containers:
-      - name: database-salvador
+      - name: backend-salvador
         image: 192.168.2.202:5000/backend-node-salvador:1.0.0
         ports:
           - containerPort: 3000

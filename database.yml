@@ -4,12 +4,12 @@ metadata:
   name: database-salvador
 spec:
   selector:
-    app: database
+    app: database-salvador
   ports:
     - protocol: TCP
-      port: 27017    # Port du service DB (ex. MySQL)
-      targetPort: 27017  # Port du conteneur DB
-  type: ClusterIP  # Service interne uniquement
+      port: 27017
+      targetPort: 27017
+  type: ClusterIP
 
 ---
 
